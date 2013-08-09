@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fae47921_6c10774f",
+        "filename": "libgralloc/alloc_controller.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 3304
+      },
+      "writtenOn": "2013-08-09T06:43:36Z",
+      "side": 1,
+      "message": "We may want to suppress this ALOGW() as it floods logcat.",
+      "revId": "a3d29b449503bb9ca3184bb5e79d0a7522b8bc46",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
