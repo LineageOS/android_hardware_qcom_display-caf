@@ -31,6 +31,10 @@ ifneq ($(filter msm8974 msm8x74 msm8226 msm8x26,$(TARGET_BOARD_PLATFORM)),)
     common_flags += -DMDSS_TARGET
 endif
 
+ifeq ($(DISPLAY_DEBUG_SWAPINTERVAL),true)
+    common_flags += -DDEBUG_SWAPINTERVAL
+endif
+
 # Executed only on QCOM BSPs
 ifeq ($(TARGET_USES_QCOM_BSP),true)
 # This flag is used to compile out any features that depend on framework changes
