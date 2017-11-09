@@ -1143,6 +1143,7 @@ int hwc_sync(hwc_context_t *ctx, hwc_display_contents_1_t* list, int dpy,
     if(dpy)
        isExtAnimating = ctx->listStats[dpy].isDisplayAnimating;
 
+#ifndef USE_MDP3
 #ifndef MDSS_TARGET
     //Send acquireFenceFds to rotator
     if(mdpVersion >= qdutils::MDP_V4_0 && mdpVersion < qdutils::MDSS_V5) {
@@ -1168,6 +1169,7 @@ int hwc_sync(hwc_context_t *ctx, hwc_display_contents_1_t* list, int dpy,
     } else {
         //TODO B-family
     }
+#endif
 #endif
 
     //Accumulate acquireFenceFds for MDP
