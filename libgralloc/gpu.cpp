@@ -20,7 +20,9 @@
 #include <fcntl.h>
 #include <cutils/properties.h>
 #include <sys/mman.h>
-
+#ifdef QCOM_BSP_WITH_GENLOCK
+#include <genlock.h>
+#endif
 #include "gr.h"
 #include "gpu.h"
 #include "memalloc.h"
@@ -93,6 +95,12 @@ int gpu_context_t::gralloc_alloc_buffer(size_t size, int usage,
         ALOGE_IF(eDataErr, "gralloc failed for eDataErr=%s",
                                           strerror(-eDataErr));
 
+#ifdef QCOM_BSP_WITH_GENLOCK
+        if (usage & GRALLOC_USAGE_PRIVATE_UNSYNCHRONIZED) {
+            flags |= private_handle_t::PRIV_FLAGS_UNSYNCHRONIZED;
+        }
+#endif
+
         if (usage & GRALLOC_USAGE_PRIVATE_EXTERNAL_ONLY) {
             flags |= private_handle_t::PRIV_FLAGS_EXTERNAL_ONLY;
             //The EXTERNAL_BLOCK flag is always an add-on
@@ -152,7 +160,9 @@ int gpu_context_t::gralloc_alloc_buffer(size_t size, int usage,
 
         hnd->offset = data.offset;
         hnd->base = int(data.base) + data.offset;
+#ifndef QCOM_BSP_WITH_GENLOCK
         hnd->gpuaddr = 0;
+#endif
 
         *pHandle = hnd;
     }
@@ -310,12 +320,23 @@ int gpu_context_t::alloc_impl(int w, int h, int format, int usage,
         return err;
     }
 
+#ifdef QCOM_BSP_WITH_GENLOCK
+    // Create a genlock lock for this buffer handle.
+    err = genlock_create_lock((native_handle_t*)(*pHandle));
+    if (err) {
+        ALOGE("%s: genlock_create_lock failed", __FUNCTION__);
+        free_impl(reinterpret_cast<private_handle_t*>(pHandle));
+        return err;
+    }
+#endif
+
     *pStride = alignedw;
     return 0;
 }
 
 int gpu_context_t::free_impl(private_handle_t const* hnd) {
     private_module_t* m = reinterpret_cast<private_module_t*>(common.module);
+
     if (hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) {
         const size_t bufferSize = m->finfo.line_length * m->info.yres;
         int index = (hnd->base - m->framebuffer->base) / bufferSize;
@@ -336,6 +357,15 @@ int gpu_context_t::free_impl(private_handle_t const* hnd) {
         if (err)
             return err;
     }
+
+#ifdef QCOM_BSP_WITH_GENLOCK
+    // Release the genlock
+    int err = genlock_release_lock((native_handle_t*)hnd);
+    if (err) {
+        ALOGE("%s: genlock_release_lock failed", __FUNCTION__);
+    }
+#endif
+
     delete hnd;
     return 0;
 }

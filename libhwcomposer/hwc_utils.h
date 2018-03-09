@@ -42,6 +42,9 @@
 #define DAEMON_SOCKET "pps"
 //Fwrd decls
 struct hwc_context_t;
+#ifdef USE_MDP3
+struct framebuffer_device_t;
+#endif
 
 namespace ovutils = overlay::utils;
 
@@ -396,6 +399,9 @@ inline void swap(T& a, T& b) {
 struct hwc_context_t {
     hwc_composer_device_1_t device;
     const hwc_procs_t* proc;
+#ifdef USE_MDP3
+    framebuffer_device_t *mFbDev;
+#endif
 
     //CopyBit objects
     qhwc::CopyBit *mCopyBit[HWC_NUM_DISPLAY_TYPES];

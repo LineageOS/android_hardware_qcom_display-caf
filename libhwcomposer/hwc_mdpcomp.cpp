@@ -193,6 +193,11 @@ bool MDPComp::setupBasePipe(hwc_context_t *ctx) {
     memset(&ovData, 0, sizeof(msmfb_overlay_data));
 
     ovInfo.src.format = MDP_RGB_BORDERFILL;
+    int mdpVersion = qdutils::MDPVersion::getInstance().getMDPVersion();
+    if (mdpVersion >= qdutils::MDP_V4_2)
+        ovInfo.src.format = MDP_RGB_BORDERFILL;
+    else
+        ovInfo.src.format = MDP_RGBA_8888;
     ovInfo.src.width  = fb_width;
     ovInfo.src.height = fb_height;
     ovInfo.src_rect.w = fb_width;

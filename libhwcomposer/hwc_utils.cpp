@@ -36,6 +36,9 @@
 #include "hwc_qclient.h"
 #include "QService.h"
 #include "comptype.h"
+#ifdef USE_MDP3
+#include <fb_priv.h>
+#endif
 
 using namespace qClient;
 using namespace qService;
@@ -56,6 +59,14 @@ static int openFramebufferDevice(hwc_context_t *ctx)
         ALOGE("%s: Error Opening FB : %s", __FUNCTION__, strerror(errno));
         return -errno;
     }
+#ifdef USE_MDP3
+    hw_module_t const *module;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
+        framebuffer_open(module, &(ctx->mFbDev));
+        private_module_t* m = reinterpret_cast<private_module_t*>(
+                ctx->mFbDev->common.module);
+    }
+#endif
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &info) == -1) {
         ALOGE("%s:Error in ioctl FBIOGET_VSCREENINFO: %s", __FUNCTION__,
@@ -1346,7 +1357,7 @@ void setMdpFlags(hwc_layer_1_t *layer,
     }
 }
 
-inline int configRotator(Rotator *rot, Whf& whf,
+int configRotator(Rotator *rot, Whf& whf,
         const Whf& origWhf, const eMdpFlags& mdpFlags,
         const eTransform& orient,
         const int& downscale) {
@@ -1417,7 +1428,7 @@ ovutils::eDest getPipeForFb(hwc_context_t *ctx, int dpy) {
     return ov.nextPipe(ovutils::OV_MDP_PIPE_VG, dpy);
 }
 
-inline int configMdp(Overlay *ov, const PipeArgs& parg,
+int configMdp(Overlay *ov, const PipeArgs& parg,
         const eTransform& orient, const hwc_rect_t& crop,
         const hwc_rect_t& pos, const MetaData_t *metadata,
         const eDest& dest) {
@@ -1443,7 +1454,7 @@ inline int configMdp(Overlay *ov, const PipeArgs& parg,
     return 0;
 }
 
-inline void updateSource(eTransform& orient, Whf& whf,
+void updateSource(eTransform& orient, Whf& whf,
         hwc_rect_t& crop) {
     Dim srcCrop(crop.left, crop.top,
             crop.right - crop.left,

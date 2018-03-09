@@ -265,7 +265,19 @@ int IonController::allocate(alloc_data& data, int usage)
     data.flags = ionFlags;
     ret = mIonAlloc->alloc_buffer(data);
 
-    // Fallback
+    // Fallback to CAMERA PREVIEW heap if
+    // allocation is for fb1 AND
+    // allocation from SF heap fails
+    // Reason : fb1 had to go to MDP and MDP can't use system heap
+    // TODO : don't hardcode based on 'usage'
+
+    if(ret < 0 && (usage == 6659)) {
+       ALOGW("Falling back to CAMERA_PREVIEW heap for fb allocations");
+       data.flags = ION_HEAP(ION_CAMERA_HEAP_ID);
+       ret = mIonAlloc->alloc_buffer(data);
+    }
+
+    // Fallback to system heap
     if(ret < 0 && canFallback(usage,
                               (ionFlags & ION_SYSTEM_HEAP_ID)))
     {
